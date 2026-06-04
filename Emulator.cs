@@ -116,6 +116,7 @@ public class Emulator
         Raylib.DrawTexturePro(texture, source, target, new Vector2(0.0f, 0.0f), 0.0f, Color.White);
 
         Raylib.EndDrawing();
+        // drawFlag = false;
     }
 
     private void EmulateCycle()
@@ -178,6 +179,9 @@ public class Emulator
                 Draw(GetXValue(opcode), GetYValue(opcode), GetTrailingNibble(opcode));
                 NextInstruction();
                 break;
+            case 0xF000:
+                HandleFXor();
+                break;
             default:
                 Console.WriteLine("Unknown opcode 0x" + opcode.ToString("X4"));
                 break;
@@ -199,6 +203,82 @@ public class Emulator
         }
         
         
+    }
+
+    private void HandleFXor()
+    {
+        switch (opcode & 0x00FF)
+        {
+            case 0x07:
+                SetXValue(opcode, delayTimer);
+                NextInstruction();
+                break;
+            case 0x0A:
+                
+                break;
+            case 0x15:
+                SetDelayTimerValue(GetXValue(opcode));
+                NextInstruction();
+                break;
+            case 0x18:
+                SetSoundTimerValue(GetXValue(opcode));
+                NextInstruction();
+                break;
+            case 0x1E:
+                index += GetXValue(opcode);
+                NextInstruction();
+                break;
+            case 0x29:
+                var value = GetXValue(opcode) & 0x0F;
+                var offset = (ushort)(value * 5);
+                index = offset;
+                NextInstruction();
+                break;
+            case 0x33:
+                ByteCodedDigits();
+                NextInstruction();
+                break;
+            case 0x55:
+                RegDump();
+                NextInstruction();
+                break;
+            case 0x65:
+                RegLoad();
+                NextInstruction();
+                break;
+            default:
+                Console.WriteLine("Unknown opcode 0x" + opcode.ToString("X4"));
+                break;
+        }
+    }
+
+    private void RegLoad()
+    {
+        var x = MaskX(opcode);
+        for (int i = 0; i <= x; i++)
+        {
+            registers[i] = memory[index + i];
+        }
+    }
+
+    private void RegDump()
+    {
+        var x = MaskX(opcode);
+        for (int i = 0; i <= x; i++)
+        {
+            memory[index + i] = registers[i];
+        }
+    }
+
+    private void ByteCodedDigits()
+    {
+        var xValue = GetXValue(opcode);
+        var hundreds = xValue / 100;
+        var tens = (xValue / 10) % 10;
+        var units = (xValue) % 10;
+        memory[index] = (byte)hundreds;
+        memory[index + 1] = (byte)tens;
+        memory[index + 2] = (byte)units;
     }
 
     private void Draw(byte x, byte y, ushort numPixels)
@@ -422,5 +502,15 @@ public class Emulator
     private void IncrementXValue(ushort opcode, byte value)
     {
         SetXValue(opcode, (byte)(GetXValue(opcode) + value));
+    }
+
+    private void SetDelayTimerValue(byte value)
+    {
+        delayTimer = value;
+    }
+
+    private void SetSoundTimerValue(byte value)
+    {
+        soundTimer = value;
     }
 }
