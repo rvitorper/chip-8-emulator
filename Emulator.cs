@@ -133,7 +133,6 @@ public class Emulator
             case 0x2000:
                 ushort target = GetTrailingThreeNibbles(opcode);
                 CallSubroutine(target);
-                NextInstruction();
                 break;
             case 0x3000:
                 SkipInstructionIf(GetXValue(opcode) == GetTrailingByte(opcode));
@@ -231,35 +230,45 @@ public class Emulator
     {
         switch (opcode & 0x000F)
         {
-            case 0x0000:
+            case 0x0:
                 SetXValue(opcode, GetYValue(opcode));
                 NextInstruction();
                 break;
-            case 0x1000:
+            case 0x1:
                 SetXValue(opcode, (byte)(GetXValue(opcode) | GetYValue(opcode)));
                 NextInstruction();
                 break;
-            case 0x2000:
+            case 0x2:
                 SetXValue(opcode, (byte)(GetXValue(opcode) & GetYValue(opcode)));
                 NextInstruction();
                 break;
-            case 0x3000:
+            case 0x3:
                 SetXValue(opcode, (byte)(GetXValue(opcode) ^ GetYValue(opcode)));
                 NextInstruction();
                 break;
-            case 0x4000:
-                SetXValue(opcode, (byte)(GetXValue(opcode) + GetYValue(opcode)));
+            case 0x4:
                 CheckCarry(GetXValue(opcode), GetYValue(opcode));
+                SetXValue(opcode, (byte)(GetXValue(opcode) + GetYValue(opcode)));
                 NextInstruction();
                 break;
-            case 0x5000:
-                SetXValue(opcode, (byte)(GetXValue(opcode) + GetYValue(opcode)));
+            case 0x5:
                 CheckUnderflow(GetXValue(opcode), GetYValue(opcode));
+                SetXValue(opcode, (byte)(GetXValue(opcode) - GetYValue(opcode)));
                 NextInstruction();
                 break;
-            case 0x6000:
-                SetXValue(opcode, (byte)(GetXValue(opcode) + GetYValue(opcode)));
-                CheckUnderflow(GetXValue(opcode), GetYValue(opcode));
+            case 0x6:
+                StoreLeastSignificantBit(GetXValue(opcode));
+                SetXValue(opcode, (byte)(GetXValue(opcode) >> 1));
+                NextInstruction();
+                break;
+            case 0x7:
+                CheckUnderflow(GetYValue(opcode), GetXValue(opcode));
+                SetXValue(opcode, (byte)(GetYValue(opcode) - GetXValue(opcode)));
+                NextInstruction();
+                break;
+            case 0xE:
+                StoreMostSignificantBit(GetXValue(opcode));
+                SetXValue(opcode, (byte)(GetXValue(opcode) << 1));
                 NextInstruction();
                 break;
             default:
@@ -288,6 +297,16 @@ public class Emulator
             return;
         }
         registers[15] = 0;
+    }
+
+    private void StoreMostSignificantBit(byte a)
+    {
+        registers[15] = (byte)(a & 0x8000);
+    }
+
+    private void StoreLeastSignificantBit(byte a)
+    {
+        registers[15] = (byte)(a & 0x1);
     }
 
     private void HandleNilXor()
