@@ -327,28 +327,23 @@ public class Emulator
                 NextInstruction();
                 break;
             case 0x4:
-                CheckCarry(GetXValue(opcode), GetYValue(opcode));
-                SetXValue(opcode, (byte)(GetXValue(opcode) + GetYValue(opcode)));
+                XPlusY();
                 NextInstruction();
                 break;
             case 0x5:
-                CheckUnderflow(GetXValue(opcode), GetYValue(opcode));
-                SetXValue(opcode, (byte)(GetXValue(opcode) - GetYValue(opcode)));
+                XMinusY();
                 NextInstruction();
                 break;
             case 0x6:
-                StoreLeastSignificantBit(GetXValue(opcode));
-                SetXValue(opcode, (byte)(GetXValue(opcode) >> 1));
+                RightShiftX();
                 NextInstruction();
                 break;
             case 0x7:
-                CheckUnderflow(GetYValue(opcode), GetXValue(opcode));
-                SetXValue(opcode, (byte)(GetYValue(opcode) - GetXValue(opcode)));
+                YMinusX();
                 NextInstruction();
                 break;
             case 0xE:
-                StoreMostSignificantBit(GetXValue(opcode));
-                SetXValue(opcode, (byte)(GetXValue(opcode) << 1));
+                LeftShiftX();
                 NextInstruction();
                 break;
             default:
@@ -357,31 +352,66 @@ public class Emulator
         }
     }
 
-    private void CheckUnderflow(byte a, byte b)
+    private void LeftShiftX()
+    {
+        var value = GetXValue(opcode);
+        SetXValue(opcode, (byte)(GetXValue(opcode) << 1));
+        StoreMostSignificantBit(value);
+    }
+
+    private void RightShiftX()
+    {
+        var value = GetXValue(opcode);
+        SetXValue(opcode, (byte)(GetXValue(opcode) >> 1));
+        StoreLeastSignificantBit(value);
+    }
+
+    private void XPlusY()
+    {
+        var carry = CheckCarry(GetXValue(opcode), GetYValue(opcode));
+        SetXValue(opcode, (byte)(GetXValue(opcode) + GetYValue(opcode)));
+        registers[15] = (byte)(carry ? 1 : 0);
+    }
+
+    private void XMinusY()
+    {
+        var underflow = CheckUnderflow(GetXValue(opcode), GetYValue(opcode));
+        SetXValue(opcode, (byte)(GetXValue(opcode) - GetYValue(opcode)));
+        registers[15] = (underflow == true) ? (byte)1 : (byte)0;
+    }
+
+    private void YMinusX()
+    {
+        var underflow = CheckUnderflow(GetYValue(opcode), GetXValue(opcode));
+        SetXValue(opcode, (byte)(GetYValue(opcode) - GetXValue(opcode)));
+        registers[15] = (underflow == true) ? (byte)1 : (byte)0;
+    }
+
+    private bool CheckUnderflow(byte a, byte b)
     {
         if (a >= b)
         {
-            registers[15] = 1;
-            return;
+            return true;
         }
-        registers[15] = 0;
+
+        return false;
     }
 
-    private void CheckCarry(byte a, byte b)
+    private bool CheckCarry(byte a, byte b)
     {
-        var xor = a ^ b;
-        var and = a & b;
-        if ( xor == 0 && and == 0xFF)
+        var sum = a + b;
+        if (sum >= 256)
         {
-            registers[15] = 1;
-            return;
+            return true;
         }
-        registers[15] = 0;
+
+        return false;
     }
 
     private void StoreMostSignificantBit(byte a)
     {
-        registers[15] = (byte)(a & 0x8000);
+        var mask = (byte)(a & 0x80);
+        registers[15] = mask > 1? (byte)1 : (byte)0;
     }
 
     private void StoreLeastSignificantBit(byte a)
