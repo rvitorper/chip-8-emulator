@@ -211,7 +211,7 @@ public class Emulator
             for (int j = 0; j < 8; j++)
             {
                 var offset = x + 64 * y + j + i * 64;
-                var bitmask = (1 >> j);
+                var bitmask = (0x80 >> j);
                 byte masked = (byte)(memoryPixel & bitmask);
                 var changed = gfx[offset] ^ masked;
                 SetVFValue((byte)(GetVFValue() | changed));
