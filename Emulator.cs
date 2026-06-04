@@ -182,6 +182,9 @@ public class Emulator
             case 0xF000:
                 HandleFXor();
                 break;
+            case 0xE000:
+                HandleEXor();
+                break;
             default:
                 Console.WriteLine("Unknown opcode 0x" + opcode.ToString("X4"));
                 break;
@@ -203,6 +206,36 @@ public class Emulator
         }
         
         
+    }
+
+    private void HandleEXor()
+    {
+        switch (opcode & 0x00FF)
+        {
+            case 0x9E:
+                SkipIfPressed();
+                NextInstruction();
+                break;
+            case 0xA1:
+                SkipIfNotPressed();
+                NextInstruction();
+                break;
+            default:
+                Console.WriteLine("Unknown opcode 0x" + opcode.ToString("X4"));
+                break;
+        }
+    }
+
+    private void SkipIfNotPressed()
+    {
+        var lowestNibble = GetXValue(opcode) & 0xF;
+        SkipInstructionIf(keyPad[lowestNibble] == 0);
+    }
+
+    private void SkipIfPressed()
+    {
+        var lowestNibble = GetXValue(opcode) & 0xF;
+        SkipInstructionIf(keyPad[lowestNibble] > 0);
     }
 
     private void HandleFXor()
