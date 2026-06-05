@@ -19,6 +19,8 @@ public class Emulator
     private ushort stackPointer;
     private byte[] keyPad  = new byte[16];
     private bool drawFlag = false;
+    private bool waitingForRelease = false;
+    private byte keyPressed = 0xFF;
     private Texture2D texture;
 
     public Emulator()
@@ -60,11 +62,6 @@ public class Emulator
         soundTimer = 0;
     }
 
-    private void SetupInput()
-    {
-        throw new NotImplementedException();
-    }
-
     private void SetupGraphics()
     {
         Image image = Raylib.GenImageColor(64, 32, Color.Black);
@@ -94,7 +91,36 @@ public class Emulator
 
     private void SetKeys()
     {
-        
+        var keyBindings =
+        new List<(KeyboardKey, ushort)>{
+            (KeyboardKey.One, 0x1),
+            (KeyboardKey.Two, 0x2),
+            (KeyboardKey.Three, 0x3),
+            (KeyboardKey.Four, 0xC),
+            (KeyboardKey.Q, 0x4),
+            (KeyboardKey.W, 0x5),
+            (KeyboardKey.E, 0x6),
+            (KeyboardKey.R, 0xD),
+            (KeyboardKey.A, 0x7),
+            (KeyboardKey.S, 0x8),
+            (KeyboardKey.D, 0x9),
+            (KeyboardKey.F, 0xE),
+            (KeyboardKey.Z, 0xA),
+            (KeyboardKey.X, 0x0),
+            (KeyboardKey.C, 0xB),
+            (KeyboardKey.V, 0xF),
+        };
+        foreach (var keyBinding in keyBindings)
+        {
+            if (Raylib.IsKeyDown(keyBinding.Item1))
+            {
+                keyPad[keyBinding.Item2] = 1;
+            }
+            else
+            {
+                keyPad[keyBinding.Item2] = 0;
+            }
+        }
     }
 
     private void DrawGraphics()
@@ -247,7 +273,23 @@ public class Emulator
                 NextInstruction();
                 break;
             case 0x0A:
-                
+                var pressedKey = GetKeyPressed();
+                if (pressedKey == 0xFF && !waitingForRelease)
+                {
+                    break;
+                }
+                if (pressedKey == 0xFF && waitingForRelease)
+                {
+                    SetXValue(opcode, keyPressed);
+                    NextInstruction();
+                    keyPressed = 0xFF;
+                    waitingForRelease = false;
+                }
+                if (pressedKey != 0xFF)
+                {
+                    keyPressed = pressedKey;
+                    waitingForRelease = true;
+                }
                 break;
             case 0x15:
                 SetDelayTimerValue(GetXValue(opcode));
@@ -283,6 +325,18 @@ public class Emulator
                 Console.WriteLine("Unknown opcode 0x" + opcode.ToString("X4"));
                 break;
         }
+    }
+
+    private byte GetKeyPressed()
+    {
+        for (int i = 0; i < keyPad.Length; i++)
+        {
+            if (keyPad[i] > 0)
+            {
+                return (byte)i;
+            }
+        }
+        return 0xFF;
     }
 
     private void RegLoad()
@@ -327,6 +381,10 @@ public class Emulator
                 byte masked = (byte)(memoryPixel & bitmask);
                 if (masked != 0)
                 {
+                    if (offset >= 64 * 32)
+                    {
+                        continue;
+                    }
                     if (gfx[offset] > 0)
                     {
                         SetVFValue(1);

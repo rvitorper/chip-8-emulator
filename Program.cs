@@ -3,7 +3,7 @@ using Raylib_cs;
 
 Raylib.InitWindow(640, 320, "Chip 8 Emulator");
 var emulator = new Emulator();
-emulator.Load("/Users/ramon/Documents/chip-8-emulator/5-quirks.ch8");
+emulator.Load("/Users/ramon/Documents/chip-8-emulator/6-keypad.ch8");
 while (!Raylib.WindowShouldClose())
 {
     emulator.Loop();
