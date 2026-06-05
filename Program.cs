@@ -2,9 +2,8 @@
 using chip_8_emulator;
 using Raylib_cs;
 
-void Draw(Emulator emulator, Texture2D texture2D)
+void Draw(byte[] gfx, Texture2D texture2D)
 {
-    var gfx = emulator.GetGraphics();
     Color[] pixelData = new Color[64 * 32];
     for (int i = 0; i < gfx.Length; i++)
     {
@@ -75,7 +74,7 @@ while (!Raylib.WindowShouldClose())
     emulator.DecreaseTimers();
     if (emulator.GetDrawFlag())
     {
-        Draw(emulator, texture);
+        Draw(emulator.GetGraphics(), texture);
     }
 
     SetKeys(emulator);
