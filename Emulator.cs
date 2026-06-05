@@ -273,23 +273,7 @@ public class Emulator
                 NextInstruction();
                 break;
             case 0x0A:
-                var pressedKey = GetKeyPressed();
-                if (pressedKey == 0xFF && !waitingForRelease)
-                {
-                    break;
-                }
-                if (pressedKey == 0xFF && waitingForRelease)
-                {
-                    SetXValue(opcode, keyPressed);
-                    NextInstruction();
-                    keyPressed = 0xFF;
-                    waitingForRelease = false;
-                }
-                if (pressedKey != 0xFF)
-                {
-                    keyPressed = pressedKey;
-                    waitingForRelease = true;
-                }
+                HandleKeyPressHalting();
                 break;
             case 0x15:
                 SetDelayTimerValue(GetXValue(opcode));
@@ -324,6 +308,27 @@ public class Emulator
             default:
                 Console.WriteLine("Unknown opcode 0x" + opcode.ToString("X4"));
                 break;
+        }
+    }
+
+    private void HandleKeyPressHalting()
+    {
+        var pressedKey = GetKeyPressed();
+        if (pressedKey == 0xFF && !waitingForRelease)
+        {
+            return;
+        }
+        if (pressedKey == 0xFF && waitingForRelease)
+        {
+            SetXValue(opcode, keyPressed);
+            NextInstruction();
+            keyPressed = 0xFF;
+            waitingForRelease = false;
+        }
+        if (pressedKey != 0xFF)
+        {
+            keyPressed = pressedKey;
+            waitingForRelease = true;
         }
     }
 
@@ -376,6 +381,10 @@ public class Emulator
             var memoryPixel = memory[index + i];
             for (int j = 0; j < 8; j++)
             {
+                if (x >= 64 || x < 0 || y >= 64 || y < 0)
+                {
+                    continue;
+                } 
                 var offset = x + 64 * y + j + i * 64;
                 var bitmask = (0x80 >> j);
                 byte masked = (byte)(memoryPixel & bitmask);
@@ -445,6 +454,7 @@ public class Emulator
 
     private void LeftShiftX()
     {
+        SetXValue(opcode, GetYValue(opcode));
         var value = GetXValue(opcode);
         SetXValue(opcode, (byte)(GetXValue(opcode) << 1));
         StoreMostSignificantBit(value);
@@ -452,6 +462,7 @@ public class Emulator
 
     private void RightShiftX()
     {
+        SetXValue(opcode, GetYValue(opcode));
         var value = GetXValue(opcode);
         SetXValue(opcode, (byte)(GetXValue(opcode) >> 1));
         StoreLeastSignificantBit(value);
