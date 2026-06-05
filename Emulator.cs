@@ -21,7 +21,6 @@ public class Emulator
     private bool drawFlag = false;
     private bool waitingForRelease = false;
     private byte keyPressed = 0xFF;
-    private Texture2D texture;
 
     public Emulator()
     {
@@ -64,9 +63,7 @@ public class Emulator
 
     private void SetupGraphics()
     {
-        Image image = Raylib.GenImageColor(64, 32, Color.Black);
-        texture = Raylib.LoadTextureFromImage(image);
-        Raylib.UnloadImage(image);
+        
     }
 
     public void Load(string rom)
@@ -81,71 +78,19 @@ public class Emulator
     public void Loop()
     {
         EmulateCycle();
-        if (drawFlag)
-        {
-            DrawGraphics();
-        }
-
-        SetKeys();
     }
 
-    private void SetKeys()
+    public bool GetDrawFlag()
     {
-        var keyBindings =
-        new List<(KeyboardKey, ushort)>{
-            (KeyboardKey.One, 0x1),
-            (KeyboardKey.Two, 0x2),
-            (KeyboardKey.Three, 0x3),
-            (KeyboardKey.Four, 0xC),
-            (KeyboardKey.Q, 0x4),
-            (KeyboardKey.W, 0x5),
-            (KeyboardKey.E, 0x6),
-            (KeyboardKey.R, 0xD),
-            (KeyboardKey.A, 0x7),
-            (KeyboardKey.S, 0x8),
-            (KeyboardKey.D, 0x9),
-            (KeyboardKey.F, 0xE),
-            (KeyboardKey.Z, 0xA),
-            (KeyboardKey.X, 0x0),
-            (KeyboardKey.C, 0xB),
-            (KeyboardKey.V, 0xF),
-        };
-        foreach (var keyBinding in keyBindings)
-        {
-            if (Raylib.IsKeyDown(keyBinding.Item1))
-            {
-                keyPad[keyBinding.Item2] = 1;
-            }
-            else
-            {
-                keyPad[keyBinding.Item2] = 0;
-            }
-        }
+        return drawFlag;
     }
 
-    private void DrawGraphics()
+    public byte[] GetGraphics()
     {
-        Color[] pixelData = new Color[64 * 32];
-        for (int i = 0; i < gfx.Length; i++)
-        {
-            pixelData[i] = Color.Black;
-            if (gfx[i] > 0)
-            {
-                pixelData[i] = Color.White;
-            }
-        }
-        Raylib.UpdateTexture(texture, pixelData);
-        Raylib.BeginDrawing();
-        Raylib.ClearBackground(Color.Black);
-        Rectangle source = new Rectangle(0, 0, 64, 32);
-        Rectangle target = new Rectangle(0, 0, 640, 320);
-        Raylib.DrawTexturePro(texture, source, target, new Vector2(0.0f, 0.0f), 0.0f, Color.White);
-
-        Raylib.EndDrawing();
-        // drawFlag = false;
+        return gfx;
     }
 
-    private void EmulateCycle()
+    public void EmulateCycle()
     {
         opcode = (ushort) (memory[programCounter] << 8 | memory[programCounter + 1]);
         switch (opcode & 0xF000)
@@ -215,7 +160,10 @@ public class Emulator
                 Console.WriteLine("Unknown opcode 0x" + opcode.ToString("X4"));
                 break;
         }
+    }
 
+    public void DecreaseTimers()
+    {
         if (delayTimer > 0)
         {
             delayTimer--;
@@ -230,8 +178,6 @@ public class Emulator
 
             soundTimer--;
         }
-        
-        
     }
 
     private void HandleEXor()
@@ -657,5 +603,10 @@ public class Emulator
     private void SetSoundTimerValue(byte value)
     {
         soundTimer = value;
+    }
+
+    public void SetKey(ushort keyBindingItem2, int value)
+    {
+        keyPad[keyBindingItem2] = (byte)(value);
     }
 }
