@@ -351,6 +351,8 @@ public class Emulator
         {
             registers[i] = memory[index + i];
         }
+        index += x;
+        index++;
     }
 
     private void RegDump()
@@ -360,6 +362,9 @@ public class Emulator
         {
             memory[index + i] = registers[i];
         }
+
+        index += x;
+        index++;
     }
 
     private void ByteCodedDigits()
