@@ -416,14 +416,17 @@ public class Emulator
                 break;
             case 0x1:
                 SetXValue(opcode, (byte)(GetXValue(opcode) | GetYValue(opcode)));
+                ResetVF();
                 NextInstruction();
                 break;
             case 0x2:
                 SetXValue(opcode, (byte)(GetXValue(opcode) & GetYValue(opcode)));
+                ResetVF();
                 NextInstruction();
                 break;
             case 0x3:
                 SetXValue(opcode, (byte)(GetXValue(opcode) ^ GetYValue(opcode)));
+                ResetVF();
                 NextInstruction();
                 break;
             case 0x4:
@@ -450,6 +453,11 @@ public class Emulator
                 Console.WriteLine("Unknown opcode in Eighth Set 0x" + opcode.ToString("X4"));
                 break;
         }
+    }
+
+    private void ResetVF()
+    {
+        registers[15] = 0;
     }
 
     private void LeftShiftX()
