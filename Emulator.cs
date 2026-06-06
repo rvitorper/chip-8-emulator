@@ -332,11 +332,11 @@ public class Emulator
             var memoryPixel = memory[index + i];
             for (int j = 0; j < 8; j++)
             {
-                if (x >= 64 || x < 0 || y >= 64 || y < 0)
+                if (x%64+j >= 64 || y%32+i >= 32)
                 {
                     continue;
                 } 
-                var offset = x + 64 * y + j + i * 64;
+                var offset = x%64 + 64 * (y%32) + j + i * 64;
                 var bitmask = (0x80 >> j);
                 byte masked = (byte)(memoryPixel & bitmask);
                 if (masked != 0)
