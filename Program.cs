@@ -26,7 +26,7 @@ void Draw(byte[] gfx, Texture2D texture2D)
 Raylib.InitWindow(640, 320, "Chip 8 Emulator");
 Raylib.SetTargetFPS(60);
 var emulator = new Emulator();
-emulator.Load("/Users/ramon/Documents/chip-8-emulator/5-quirks.ch8");
+emulator.Load("/Users/ramon/Documents/chip-8-emulator/Pong.ch8");
 Image image = Raylib.GenImageColor(64, 32, Color.Black);
 var texture = Raylib.LoadTextureFromImage(image);
 Raylib.UnloadImage(image);
@@ -67,16 +67,16 @@ void SetKeys(Emulator emulator)
 
 while (!Raylib.WindowShouldClose())
 {
-    for (int i = 0; i < 20; i++)
+    for (int i = 0; i < 10; i++)
     {
         emulator.EmulateCycle();
+        SetKeys(emulator);
     }
     emulator.DecreaseTimers();
     if (emulator.GetDrawFlag())
     {
         Draw(emulator.GetGraphics(), texture);
     }
-
-    SetKeys(emulator);
+    
 }
 Raylib.CloseWindow();
