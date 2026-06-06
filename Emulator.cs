@@ -138,8 +138,7 @@ public class Emulator
                 NextInstruction();
                 break;
             case 0xB000:
-                JumpTo((ushort)((byte)GetTrailingByte(opcode) + GetXValue(0x0000)));
-                NextInstruction();
+                JumpTo((ushort)(GetTrailingThreeNibbles(opcode) + GetXValue(0x0000)));
                 break;
             case 0xC000:
                 var randomInBytes = (byte)Random.Shared.Next();
